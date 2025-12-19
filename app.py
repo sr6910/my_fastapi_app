@@ -142,7 +142,7 @@ def dashboard():
     conn = get_conn()
     cur = conn.cursor()
 
-    # 地震
+    # 地震（最新10件）
     cur.execute("""
         SELECT raw_json
         FROM dis_quake_history
@@ -151,7 +151,7 @@ def dashboard():
     """)
     earthquakes = [json.loads(r[0]) for r in cur.fetchall()]
 
-    # 津波
+    # 津波（最新10件）
     cur.execute("""
         SELECT raw_json
         FROM dis_tsunami_history
