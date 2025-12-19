@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ログイン</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .container { max-width: 400px; margin: auto; }
+        input { width: 100%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; width: 100%; }
+        .msg { color: red; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>ログイン</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="msg">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>メールアドレス</label>
+        <input type="email" name="email" required>
+
+        <label>パスワード</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <p>アカウントをお持ちでない場合 <a href="/register">登録</a></p>
+</div>
+</body>
+</html>

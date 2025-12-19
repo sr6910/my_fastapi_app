@@ -1,0 +1,5 @@
+dis_supvenv/
+__pycache__/
+*.pyc
+disaster.db
+.env

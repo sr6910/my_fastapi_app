@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ダッシュボード</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .container { max-width: 600px; margin: auto; }
+        .msg { color: green; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>ダッシュボード</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="msg">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <p>{{ session['username'] }} さん、ようこそ！</p>
+
+    <a href="/logout">ログアウト</a>
+</div>
+</body>
+</html>
