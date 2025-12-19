@@ -1,4 +1,4 @@
-# fetch_disaster.py
+# main_API.py
 import requests
 import json
 import psycopg
