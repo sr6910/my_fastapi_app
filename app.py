@@ -144,24 +144,21 @@ def dashboard():
 
     # 地震
     cur.execute("""
-        SELECT raw_json FROM dis_quake_history
-        ORDER BY created_at DESC LIMIT 10
+        SELECT raw_json
+        FROM dis_quake_history
+        ORDER BY created_at DESC
+        LIMIT 10
     """)
     earthquakes = [json.loads(r[0]) for r in cur.fetchall()]
 
     # 津波
     cur.execute("""
-        SELECT raw_json FROM dis_tsunami_history
-        ORDER BY created_at DESC LIMIT 10
+        SELECT raw_json
+        FROM dis_tsunami_history
+        ORDER BY created_at DESC
+        LIMIT 10
     """)
     tsunamis = [json.loads(r[0]) for r in cur.fetchall()]
-
-    # 火山
-    cur.execute("""
-        SELECT raw_json FROM dis_volcano_history
-        ORDER BY created_at DESC LIMIT 10
-    """)
-    volcanos = [json.loads(r[0]) for r in cur.fetchall()]
 
     cur.close()
     conn.close()
@@ -169,9 +166,7 @@ def dashboard():
     return render_template(
         "dashboard.html",
         earthquakes=earthquakes,
-        tsunamis=tsunamis,
-        volcanos=volcanos,
-        username=session.get("username")
+        tsunamis=tsunamis
     )
 
 # ======================
