@@ -5,23 +5,47 @@
     <title>ダッシュボード</title>
     <style>
         body { font-family: Arial; margin: 40px; }
-        .container { max-width: 600px; margin: auto; }
-        .msg { color: green; margin-bottom: 15px; }
+        h2 { margin-top: 40px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #f0f0f0; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>ダッシュボード</h2>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="msg">{{ messages[0] }}</div>
-      {% endif %}
-    {% endwith %}
+<h1>災害情報ダッシュボード</h1>
 
-    <p>{{ session['username'] }} さん、ようこそ！</p>
+<h2>地震情報</h2>
+<table>
+<tr>
+    <th>地域</th><th>マグニチュード</th><th>最大震度</th><th>時刻</th>
+</tr>
+{% for e in earthquakes %}
+<tr>
+    <td>{{ e[0] }}</td>
+    <td>{{ e[1] }}</td>
+    <td>{{ e[2] }}</td>
+    <td>{{ e[3] }}</td>
+</tr>
+{% endfor %}
+</table>
 
-    <a href="/logout">ログアウト</a>
-</div>
+<h2>津波情報</h2>
+<table>
+<tr>
+    <th>地域</th><th>種別</th><th>危険度</th><th>時刻</th>
+</tr>
+{% for t in tsunamis %}
+<tr>
+    <td>{{ t[0] }}</td>
+    <td>{{ t[1] }}</td>
+    <td>{{ t[2] }}</td>
+    <td>{{ t[3] }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<p><a href="/logout">ログアウト</a></p>
+
 </body>
 </html>

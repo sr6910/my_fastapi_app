@@ -4,28 +4,21 @@ import json
 import psycopg
 import sqlite3
 from datetime import datetime
+import os
 
 API_LIST = {
     "earthquake": "https://www.jma.go.jp/bosai/quake/data/list.json",
     "tsunami":    "https://www.jma.go.jp/bosai/tsunami/data/list.json",
-    "volcano":    "https://www.jma.go.jp/bosai/volcano/data/list.json"
 }
 
-DB_CONFIG = {
-    "dbname": "svnw",
-    "user": "admin",
-    "password": "admin",
-    "host": "YOUR_DB_HOST",
-    "port": "5432"
-}
+def get_conn():
+    # Render の Environment に設定した DATABASE_URL を使う
+    return psycopg.connect(os.environ["DATABASE_URL"])
 
-# PostgreSQL 接続
-def connect_db():
-    return psycopg.connect(**DB_CONFIG)
 
 # PostgreSQL 保存
 def save_data(table, latest, eid_key):
-    conn = connect_db()
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute(f"""
         INSERT INTO {table} (eid, raw_json, created_at)
@@ -65,8 +58,6 @@ def process_disaster(data_type, url):
             save_data("dis_quake_history", latest, "eid")
         elif data_type == "tsunami":
             save_data("dis_tsunami_history", latest, "eid")
-        elif data_type == "volcano":
-            save_data("dis_volcano_history", latest, "vid")
         update_last_event_id(data_type, event_id)
 
 if __name__ == "__main__":
