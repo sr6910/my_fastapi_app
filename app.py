@@ -157,14 +157,19 @@ def dashboard():
 
     # 津波（最新10件）
     cur.execute("""
-    SELECT
-        raw_json->>'anm'  AS anm,
-        raw_json->>'kind' AS kind,
-        raw_json->>'level' AS level,
-        created_at
-    FROM dis_tsunami_history
-    ORDER BY created_at DESC
-    LIMIT 10
+        SELECT
+            raw_json->>'anm' AS anm,
+            raw_json->'kind'->0->>'kind' AS kind,
+            CASE
+                WHEN raw_json->'kind'->0->>'kind' LIKE '%大津波警報%' THEN 3
+                WHEN raw_json->'kind'->0->>'kind' LIKE '%津波警報%' THEN 2
+                WHEN raw_json->'kind'->0->>'kind' LIKE '%津波注意報%' THEN 1
+                ELSE 0
+            END AS level,
+            created_at
+        FROM dis_tsunami_history
+        ORDER BY created_at DESC
+        LIMIT 10
     """)
     tsunamis = cur.fetchall()
 

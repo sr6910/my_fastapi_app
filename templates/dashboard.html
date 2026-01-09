@@ -37,9 +37,15 @@
 </tr>
 {% for t in tsunamis %}
 <tr>
-    <td>{{ t[0] }}</td>
-    <td>{{ t[1] }}</td>
-    <td>{{ t[2] }}</td>
+    <td>{{ t[0] }}</td>  <!-- 地域 -->
+    <td>{{ t[1] }}</td>  <!-- 種別 -->
+    <td>
+    {% if t[2] == 3 %}★★★
+    {% elif t[2] == 2 %}★★☆
+    {% elif t[2] == 1 %}★☆☆
+    {% else %}☆☆☆
+    {% endif %}
+    </td>
     <td>{{ t[3] }}</td>
 </tr>
 {% endfor %}
