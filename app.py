@@ -144,19 +144,19 @@ def dashboard():
 
     # 地震（最新10件）
     cur.execute("""
-        SELECT raw_json
-        FROM dis_quake_history
-        ORDER BY created_at DESC
-        LIMIT 10
+    SELECT anm, mag, maxi, created_at
+    FROM dis_quake_history
+    ORDER BY created_at DESC
+    LIMIT 10
     """)
     earthquakes = [r[0] for r in cur.fetchall()]
 
     # 津波（最新10件）
     cur.execute("""
-        SELECT raw_json
-        FROM dis_tsunami_history
-        ORDER BY created_at DESC
-        LIMIT 10
+    SELECT anm, kind, level, created_at
+    FROM dis_tsunami_history
+    ORDER BY created_at DESC
+    LIMIT 10
     """)
     tsunamis = [r[0] for r in cur.fetchall()]
 
