@@ -4,9 +4,10 @@ import json
 import psycopg
 import sqlite3
 import os
+from datetime import datetime
 
 # ======================
-# テストモード判定
+# テストモード
 # ======================
 TEST_MODE = os.environ.get("TEST_MODE", "0") == "1"
 
@@ -19,25 +20,6 @@ API_LIST = {
 }
 
 # ======================
-# テスト用ダミーデータ
-# ======================
-TEST_DATA = {
-    "earthquake": {
-        "eid": "TEST_EQ_001",
-        "anm": "テスト震源",
-        "mag": "6.5",
-        "maxi": "4"
-    },
-    "tsunami": {
-        "eid": "TEST_TS_001",
-        "anm": "テスト海域",
-        "kind": [
-            {"kind": "津波注意報"}
-        ]
-    }
-}
-
-# ======================
 # PostgreSQL 接続（Render）
 # ======================
 def get_conn():
@@ -47,11 +29,6 @@ def get_conn():
 # PostgreSQL に保存
 # ======================
 def save_data(table, latest, eid_key):
-    if TEST_MODE:
-        print(f"[TEST MODE] Would save to {table}")
-        print(json.dumps(latest, ensure_ascii=False, indent=2))
-        return
-
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(f"""
@@ -68,11 +45,9 @@ def save_data(table, latest, eid_key):
 
 # ======================
 # SQLite：最後に取得した event_id 管理
+# （テストモードでは使わない）
 # ======================
 def get_last_event_id(data_type):
-    if TEST_MODE:
-        return None
-
     conn = sqlite3.connect("disaster.db")
     cur = conn.cursor()
     cur.execute("""
@@ -90,9 +65,6 @@ def get_last_event_id(data_type):
     return row[0] if row else None
 
 def update_last_event_id(data_type, event_id):
-    if TEST_MODE:
-        return
-
     conn = sqlite3.connect("disaster.db")
     cur = conn.cursor()
     cur.execute("""
@@ -108,22 +80,32 @@ def update_last_event_id(data_type, event_id):
 # 災害データ取得処理
 # ======================
 def process_disaster(data_type, url):
-    # ---- テストモード ----
+    # -------- テストモード --------
     if TEST_MODE:
-        print(f"\n[TEST MODE] Processing {data_type}")
-        latest = TEST_DATA[data_type]
-        event_id = latest.get("eid")
-        print(f"[TEST MODE] event_id = {event_id}")
+        print(f"[TEST MODE] inserting dummy {data_type}")
 
-        table = (
-            "dis_quake_history"
-            if data_type == "earthquake"
-            else "dis_tsunami_history"
-        )
-        save_data(table, latest, "eid")
+        if data_type == "earthquake":
+            dummy = {
+                "eid": f"TEST-EQ-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "anm": "テスト地域",
+                "mag": "5.6",
+                "maxi": "3"
+            }
+            save_data("dis_quake_history", dummy, "eid")
+
+        elif data_type == "tsunami":
+            dummy = {
+                "eid": f"TEST-TS-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "anm": "テスト沿岸",
+                "kind": [
+                    {"kind": "津波注意報"}
+                ]
+            }
+            save_data("dis_tsunami_history", dummy, "eid")
+
         return
 
-    # ---- 本番モード ----
+    # -------- 本番モード --------
     res = requests.get(url, timeout=10)
     res.raise_for_status()
 
@@ -147,12 +129,7 @@ def process_disaster(data_type, url):
 # メイン処理
 # ======================
 if __name__ == "__main__":
-    print("===================================")
-    print(" Disaster Fetch Script Started")
-    print(f" TEST_MODE = {TEST_MODE}")
-    print("===================================")
-
     for dtype, url in API_LIST.items():
         process_disaster(dtype, url)
 
-    print("\nFetch finished (earthquake & tsunami only)")
+    print("Fetch finished")
