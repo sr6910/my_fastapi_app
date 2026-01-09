@@ -1,5 +1,8 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import (
+    Flask, render_template, request,
+    redirect, url_for, flash, session, g
+)
 import psycopg
 import hashlib
 import json
@@ -15,7 +18,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
 # DB 接続（Render 用）
 # ======================
 def get_conn():
-    # Render の Environment に設定した DATABASE_URL を使う
     return psycopg.connect(os.environ["DATABASE_URL"])
 
 # ======================
@@ -23,6 +25,72 @@ def get_conn():
 # ======================
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
+
+# ======================
+# ログ用ユーティリティ
+# ======================
+def safe_params():
+    params = request.values.to_dict()
+    params.pop("password", None)  # パスワード除外
+    return params
+
+def infer_action():
+    if request.path == "/login" and request.method == "POST":
+        return "login"
+    if request.path == "/logout":
+        return "logout"
+    if request.path == "/register" and request.method == "POST":
+        return "register"
+    if request.path == "/dashboard":
+        return "view_dashboard"
+    return "access"
+
+# ======================
+# ログ開始（全リクエスト）
+# ======================
+@app.before_request
+def before_request():
+    g.log_data = {
+        "user_id": session.get("user_id"),
+        "method": request.method,
+        "path": request.path,
+        "params": safe_params(),
+        "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
+        "user_agent": request.user_agent.string
+    }
+
+# ======================
+# ログ保存（全レスポンス）
+# ======================
+@app.after_request
+def after_request(response):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO user_action_logs
+            (user_id, action, method, path, params, ip, user_agent, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            g.log_data.get("user_id"),
+            infer_action(),
+            g.log_data.get("method"),
+            g.log_data.get("path"),
+            json.dumps(g.log_data.get("params")),
+            g.log_data.get("ip"),
+            g.log_data.get("user_agent"),
+            response.status_code
+        ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("[ACTION LOG ERROR]", e)
+
+    return response
 
 # ======================
 # トップ（ログインへ）
@@ -42,7 +110,6 @@ def register():
         password = request.form.get("password")
         location = request.form.get("location")
 
-        # 入力チェック
         if not all([username, phone, password, location]):
             flash("全ての項目を入力してください")
             return redirect(url_for("register"))
@@ -58,17 +125,14 @@ def register():
             """, (username, phone, hashed_pw, location))
             conn.commit()
 
-        # 重複（電話番号）
         except psycopg.errors.UniqueViolation:
             flash("この電話番号は既に登録されています")
             return redirect(url_for("register"))
 
-        # DB 接続系エラー
         except psycopg.OperationalError:
-            flash("現在データベースに接続できません。時間をおいて再度お試しください。")
+            flash("現在データベースに接続できません")
             return redirect(url_for("register"))
 
-        # その他すべて
         except Exception as e:
             print("[REGISTER ERROR]", e)
             flash("登録中にエラーが発生しました")
@@ -83,7 +147,6 @@ def register():
         flash("登録が完了しました")
         return redirect(url_for("login"))
 
-    # 47都道府県
     prefectures = [
         "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
         "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
@@ -94,7 +157,6 @@ def register():
     ]
 
     return render_template("register.html", prefectures=prefectures)
-
 
 # ======================
 # ログイン
@@ -142,30 +204,30 @@ def dashboard():
     conn = get_conn()
     cur = conn.cursor()
 
-    # 地震（最新10件）
+    # 地震
     cur.execute("""
-    SELECT
-        raw_json->>'anm'  AS anm,
-        raw_json->>'mag'  AS mag,
-        raw_json->>'maxi' AS maxi,
-        created_at
-    FROM dis_quake_history
-    ORDER BY created_at DESC
-    LIMIT 10
+        SELECT
+            raw_json->>'anm',
+            raw_json->>'mag',
+            raw_json->>'maxi',
+            created_at
+        FROM dis_quake_history
+        ORDER BY created_at DESC
+        LIMIT 10
     """)
     earthquakes = cur.fetchall()
 
-    # 津波（最新10件）
+    # 津波
     cur.execute("""
         SELECT
-            raw_json->>'anm' AS anm,
-            raw_json->'kind'->0->>'kind' AS kind,
+            raw_json->>'anm',
+            raw_json->'kind'->0->>'kind',
             CASE
                 WHEN raw_json->'kind'->0->>'kind' LIKE '%大津波警報%' THEN 3
                 WHEN raw_json->'kind'->0->>'kind' LIKE '%津波警報%' THEN 2
                 WHEN raw_json->'kind'->0->>'kind' LIKE '%津波注意報%' THEN 1
                 ELSE 0
-            END AS level,
+            END,
             created_at
         FROM dis_tsunami_history
         ORDER BY created_at DESC
@@ -195,5 +257,4 @@ def logout():
 # 起動
 # ======================
 if __name__ == "__main__":
-    # Render では gunicorn が使うので通常ここは使われない
     app.run(host="0.0.0.0", port=8080, debug=True)
