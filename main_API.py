@@ -80,16 +80,14 @@ def update_last_event_id(data_type, event_id):
 # 災害データ取得処理
 # ======================
 def process_disaster(data_type, url):
-    # -------- テストモード --------
     if TEST_MODE:
-        print(f"[TEST MODE] inserting dummy {data_type}")
-
         if data_type == "earthquake":
             dummy = {
                 "eid": f"TEST-EQ-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 "anm": "テスト地域",
                 "mag": "5.6",
-                "maxi": "3"
+                "maxi": "3",
+                "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", dummy, "eid")
 
@@ -98,12 +96,13 @@ def process_disaster(data_type, url):
                 "eid": f"TEST-TS-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 "anm": "テスト沿岸",
                 "kind": [
-                    {"kind": "津波注意報"}
-                ]
+                    {"code": "900", "kind": "津波注意報"}
+                ],
+                "at": datetime.now().isoformat()
             }
             save_data("dis_tsunami_history", dummy, "eid")
-
         return
+
 
     # -------- 本番モード --------
     res = requests.get(url, timeout=10)
