@@ -158,7 +158,7 @@ def dashboard():
         ORDER BY created_at DESC
         LIMIT 10
     """)
-    tsunamis = [json.loads(r[0]) for r in cur.fetchall()]
+    tsunamis = [r[0] for r in cur.fetchall()]
 
     cur.close()
     conn.close()
