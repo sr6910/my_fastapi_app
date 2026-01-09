@@ -144,7 +144,11 @@ def dashboard():
 
     # 地震（最新10件）
     cur.execute("""
-    SELECT anm, mag, maxi, created_at
+    SELECT
+        raw_json->>'anm'  AS anm,
+        raw_json->>'mag'  AS mag,
+        raw_json->>'maxi' AS maxi,
+        created_at
     FROM dis_quake_history
     ORDER BY created_at DESC
     LIMIT 10
@@ -153,7 +157,11 @@ def dashboard():
 
     # 津波（最新10件）
     cur.execute("""
-    SELECT anm, kind, level, created_at
+    SELECT
+        raw_json->>'anm'  AS anm,
+        raw_json->>'kind' AS kind,
+        raw_json->>'level' AS level,
+        created_at
     FROM dis_tsunami_history
     ORDER BY created_at DESC
     LIMIT 10
