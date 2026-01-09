@@ -12,7 +12,7 @@ from datetime import datetime
 TEST_MODE = os.environ.get("TEST_MODE", "0") == "1"
 
 # ======================
-# 気象庁 API（地震・津波のみ）
+# 気象庁 API
 # ======================
 API_LIST = {
     "earthquake": "https://www.jma.go.jp/bosai/quake/data/list.json",
@@ -20,32 +20,31 @@ API_LIST = {
 }
 
 # ======================
-# PostgreSQL 接続（Render）
+# PostgreSQL 接続
 # ======================
 def get_conn():
     return psycopg.connect(os.environ["DATABASE_URL"])
 
 # ======================
-# PostgreSQL に保存
+# DB 保存（raw_json に丸ごと保存）
 # ======================
-def save_data(table, latest, eid_key):
+def save_data(table, raw_json):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(f"""
         INSERT INTO {table} (eid, raw_json, created_at)
         VALUES (%s, %s, NOW())
-        ON CONFLICT (eid) DO NOTHING;
+        ON CONFLICT (eid) DO NOTHING
     """, (
-        latest.get(eid_key),
-        json.dumps(latest, ensure_ascii=False)
+        raw_json["eid"],
+        json.dumps(raw_json, ensure_ascii=False)
     ))
     conn.commit()
     cur.close()
     conn.close()
 
 # ======================
-# SQLite：最後に取得した event_id 管理
-# （テストモードでは使わない）
+# SQLite: last_event 管理（本番のみ）
 # ======================
 def get_last_event_id(data_type):
     conn = sqlite3.connect("disaster.db")
@@ -77,37 +76,43 @@ def update_last_event_id(data_type, event_id):
     conn.close()
 
 # ======================
-# 災害データ取得処理
+# 災害データ処理
 # ======================
 def process_disaster(data_type, url):
+    # -------- テストモード --------
     if TEST_MODE:
+        now = datetime.now().strftime("%Y%m%d%H%M%S")
+
         if data_type == "earthquake":
-            dummy = {
-                "eid": f"TEST-EQ-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            raw_json = {
+                "eid": f"TEST-EQ-{now}",
                 "anm": "テスト地域",
                 "mag": "5.6",
                 "maxi": "3",
-                "at": datetime.now().isoformat()
+                "at": "2026-01-01T12:00:00+09:00"
             }
-            save_data("dis_quake_history", dummy, "eid")
+            save_data("dis_quake_history", raw_json)
 
         elif data_type == "tsunami":
-            dummy = {
-                "eid": f"TEST-TS-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            raw_json = {
+                "eid": f"TEST-TS-{now}",
                 "anm": "テスト沿岸",
                 "kind": [
-                    {"code": "900", "kind": "津波注意報"}
+                    {
+                        "code": "900",
+                        "kind": "津波注意報"
+                    }
                 ],
-                "at": datetime.now().isoformat()
+                "at": "2026-01-01T12:00:00+09:00"
             }
-            save_data("dis_tsunami_history", dummy, "eid")
-        return
+            save_data("dis_tsunami_history", raw_json)
 
+        print(f"[TEST MODE] inserted {data_type}")
+        return
 
     # -------- 本番モード --------
     res = requests.get(url, timeout=10)
     res.raise_for_status()
-
     data = res.json()
     if not data:
         return
@@ -118,14 +123,14 @@ def process_disaster(data_type, url):
 
     if event_id != last_event_id:
         if data_type == "earthquake":
-            save_data("dis_quake_history", latest, "eid")
+            save_data("dis_quake_history", latest)
         elif data_type == "tsunami":
-            save_data("dis_tsunami_history", latest, "eid")
+            save_data("dis_tsunami_history", latest)
 
         update_last_event_id(data_type, event_id)
 
 # ======================
-# メイン処理
+# メイン
 # ======================
 if __name__ == "__main__":
     for dtype, url in API_LIST.items():
