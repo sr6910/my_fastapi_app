@@ -1,199 +1,222 @@
-# app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-import psycopg
-import hashlib
+# main_API.py（地震＋津波 県別・震度／警報判定対応完全版）
+import requests
 import json
+import psycopg
+import sqlite3
 import os
+from datetime import datetime
+from twilio.rest import Client
 
 # ======================
-# Flask 基本設定
+# 設定
 # ======================
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
+API_LIST = {
+    "earthquake": "https://www.jma.go.jp/bosai/quake/data/list.json",
+    "tsunami":    "https://www.jma.go.jp/bosai/tsunami/data/list.json",
+}
+
+# Twilio
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+TWILIO_FROM_PHONE = os.environ.get("TWILIO_FROM_PHONE")
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if TWILIO_ACCOUNT_SID else None
+
+# テストモード
+TEST_MODE = os.environ.get("TEST_MODE", "0") == "1"
+
+# ログ用 SQLite
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SMS_DB_PATH = os.path.join(BASE_DIR, "sms_log.db")
 
 # ======================
-# DB 接続（Render 用）
+# PostgreSQL接続
 # ======================
 def get_conn():
-    # Render の Environment に設定した DATABASE_URL を使う
     return psycopg.connect(os.environ["DATABASE_URL"])
 
 # ======================
-# パスワードハッシュ
+# PostgreSQLにraw_jsonを保存
 # ======================
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
-
-# ======================
-# トップ（ログインへ）
-# ======================
-@app.route("/")
-def index():
-    return redirect(url_for("login"))
-
-# ======================
-# ユーザー登録
-# ======================
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form.get("username")
-        phone = request.form.get("phone")
-        password = request.form.get("password")
-        location = request.form.get("location")
-
-        # 入力チェック
-        if not all([username, phone, password, location]):
-            flash("全ての項目を入力してください")
-            return redirect(url_for("register"))
-
-        hashed_pw = hash_password(password)
-
-        try:
-            conn = get_conn()
-            cur = conn.cursor()
-            cur.execute("""
-                INSERT INTO dis_users (name, phone, password, location)
-                VALUES (%s, %s, %s, %s)
-            """, (username, phone, hashed_pw, location))
-            conn.commit()
-
-        # 重複（電話番号）
-        except psycopg.errors.UniqueViolation:
-            flash("この電話番号は既に登録されています")
-            return redirect(url_for("register"))
-
-        # DB 接続系エラー
-        except psycopg.OperationalError:
-            flash("現在データベースに接続できません。時間をおいて再度お試しください。")
-            return redirect(url_for("register"))
-
-        # その他すべて
-        except Exception as e:
-            print("[REGISTER ERROR]", e)
-            flash("登録中にエラーが発生しました")
-            return redirect(url_for("register"))
-
-        finally:
-            if 'cur' in locals():
-                cur.close()
-            if 'conn' in locals():
-                conn.close()
-
-        flash("登録が完了しました")
-        return redirect(url_for("login"))
-
-    # 47都道府県
-    prefectures = [
-        "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
-        "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
-        "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県",
-        "愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
-        "鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県",
-        "高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"
-    ]
-
-    return render_template("register.html", prefectures=prefectures)
-
-
-# ======================
-# ログイン
-# ======================
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        phone = request.form.get("phone")
-        password = request.form.get("password")
-
-        if not phone or not password:
-            flash("電話番号とパスワードを入力してください")
-            return redirect(url_for("login"))
-
-        hashed_pw = hash_password(password)
-
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT id, name FROM dis_users
-            WHERE phone = %s AND password = %s
-        """, (phone, hashed_pw))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        if user:
-            session["user_id"] = user[0]
-            session["username"] = user[1]
-            return redirect(url_for("dashboard"))
-        else:
-            flash("電話番号またはパスワードが間違っています")
-            return redirect(url_for("login"))
-
-    return render_template("login.html")
-
-# ======================
-# ダッシュボード
-# ======================
-@app.route("/dashboard")
-def dashboard():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
+def save_data(table, latest, eid_key):
     conn = get_conn()
     cur = conn.cursor()
-
-    # 地震（最新10件）
-    cur.execute("""
-    SELECT
-        raw_json->>'anm'  AS anm,
-        raw_json->>'mag'  AS mag,
-        raw_json->>'maxi' AS maxi,
-        created_at
-    FROM dis_quake_history
-    ORDER BY created_at DESC
-    LIMIT 10
-    """)
-    earthquakes = cur.fetchall()
-
-    # 津波（最新10件）
-    cur.execute("""
-        SELECT
-            raw_json->>'anm' AS anm,
-            raw_json->'kind'->0->>'kind' AS kind,
-            CASE
-                WHEN raw_json->'kind'->0->>'kind' LIKE '%大津波警報%' THEN 3
-                WHEN raw_json->'kind'->0->>'kind' LIKE '%津波警報%' THEN 2
-                WHEN raw_json->'kind'->0->>'kind' LIKE '%津波注意報%' THEN 1
-                ELSE 0
-            END AS level,
-            created_at
-        FROM dis_tsunami_history
-        ORDER BY created_at DESC
-        LIMIT 10
-    """)
-    tsunamis = cur.fetchall()
-
+    cur.execute(f"""
+        INSERT INTO {table} (eid, raw_json, created_at)
+        VALUES (%s, %s, NOW())
+        ON CONFLICT (eid) DO NOTHING;
+    """, (
+        latest.get(eid_key),
+        json.dumps(latest, ensure_ascii=False)
+    ))
+    conn.commit()
     cur.close()
     conn.close()
 
-    return render_template(
-        "dashboard.html",
-        earthquakes=earthquakes,
-        tsunamis=tsunamis
+# ======================
+# SQLite：最後に取得した event_id を管理
+# ======================
+def get_last_event_id(data_type):
+    conn = sqlite3.connect("disaster.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS last_event (
+            type TEXT PRIMARY KEY,
+            event_id TEXT
+        )
+    """)
+    cur.execute(
+        "SELECT event_id FROM last_event WHERE type=?",
+        (data_type,)
     )
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+def update_last_event_id(data_type, event_id):
+    conn = sqlite3.connect("disaster.db")
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO last_event(type, event_id)
+        VALUES (?, ?)
+        ON CONFLICT(type)
+        DO UPDATE SET event_id=excluded.event_id
+    """, (data_type, event_id))
+    conn.commit()
+    conn.close()
 
 # ======================
-# ログアウト
+# SMSログ保存
 # ======================
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("ログアウトしました")
-    return redirect(url_for("login"))
+def save_sms_log(user_phone, message, status, twilio_sid=None):
+    conn = sqlite3.connect(SMS_DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS sms_log(
+            user_phone TEXT,
+            message TEXT,
+            status TEXT,
+            twilio_sid TEXT,
+            sent_at TEXT
+        )
+    """)
+    cur.execute("""
+        INSERT INTO sms_log
+        (user_phone, message, status, twilio_sid, sent_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        user_phone,
+        message,
+        status,
+        twilio_sid,
+        datetime.now().isoformat()
+    ))
+    conn.commit()
+    conn.close()
 
 # ======================
-# 起動
+# 通知送信（県別・条件判定）
+# ======================
+def send_disaster_sms(raw_json, dtype):
+    conn = get_conn()
+    cur = conn.cursor()
+    # ユーザー情報を取得（電話番号と都道府県）
+    cur.execute("SELECT phone, location FROM dis_users")
+    users = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if dtype == "earthquake":
+        quake_area = raw_json.get('anm')
+        maxi = raw_json.get('maxi')
+        if not maxi:
+            return
+        try:
+            maxi_val = int(maxi)
+        except ValueError:
+            return
+
+        if maxi_val < 4:  # 震度4未満は通知しない
+            return
+
+        msg = f"[地震] {quake_area} 最大震度 {maxi_val}"
+
+        for phone, location in users:
+            if location not in quake_area:
+                continue
+            if TEST_MODE:
+                save_sms_log(phone, msg, status='test')
+                print(f"[TEST MODE] SMSログ作成: {msg} -> {phone}")
+            else:
+                try:
+                    message = client.messages.create(
+                        body=msg,
+                        from_=TWILIO_FROM_PHONE,
+                        to=phone
+                    )
+                    save_sms_log(phone, msg, status='sent', twilio_sid=message.sid)
+                    print(f"SMS送信成功: {msg} -> {phone}")
+                except Exception as e:
+                    save_sms_log(phone, msg, status='failed')
+                    print(f"SMS送信失敗: {msg} -> {phone}, error={e}")
+
+    elif dtype == "tsunami":
+        # 津波の場合は警報種別をチェック
+        kind_list = raw_json.get('kind')
+        if not kind_list:
+            return
+        kind_text = kind_list[0].get('kind', '不明')
+        # 「津波注意報」は無視、「津波警報」以上のみ通知
+        if "津波警報" not in kind_text and "大津波警報" not in kind_text:
+            return
+
+        msg = f"[津波] {raw_json.get('anm')} {kind_text}"
+
+        for phone, location in users:
+            # ユーザーの都道府県が津波対象地域に含まれていれば通知
+            tsunami_area = raw_json.get('anm', '')
+            if location not in tsunami_area:
+                continue
+
+            if TEST_MODE:
+                save_sms_log(phone, msg, status='test')
+                print(f"[TEST MODE] SMSログ作成: {msg} -> {phone}")
+            else:
+                try:
+                    message = client.messages.create(
+                        body=msg,
+                        from_=TWILIO_FROM_PHONE,
+                        to=phone
+                    )
+                    save_sms_log(phone, msg, status='sent', twilio_sid=message.sid)
+                    print(f"SMS送信成功: {msg} -> {phone}")
+                except Exception as e:
+                    save_sms_log(phone, msg, status='failed')
+                    print(f"SMS送信失敗: {msg} -> {phone}, error={e}")
+
+# ======================
+# 災害データ取得処理
+# ======================
+def process_disaster(data_type, url):
+    res = requests.get(url, timeout=10)
+    res.raise_for_status()
+    data = res.json()
+    if not data:
+        return
+
+    latest = data[0]
+    event_id = latest.get("eid") or latest.get("tid")
+    last_event_id = get_last_event_id(data_type)
+
+    if event_id != last_event_id:
+        table = "dis_quake_history" if data_type=="earthquake" else "dis_tsunami_history"
+        save_data(table, latest, "eid")  # raw_json に保存
+        send_disaster_sms(latest, data_type)  # 通知
+        update_last_event_id(data_type, event_id)  # 最終更新
+
+# ======================
+# メイン処理
 # ======================
 if __name__ == "__main__":
-    # Render では gunicorn が使うので通常ここは使われない
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    for dtype, url in API_LIST.items():
+        process_disaster(dtype, url)
+    print("Fetch & Notify finished (earthquake & tsunami)")
