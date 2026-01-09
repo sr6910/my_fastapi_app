@@ -149,7 +149,7 @@ def dashboard():
     ORDER BY created_at DESC
     LIMIT 10
     """)
-    earthquakes = [r[0] for r in cur.fetchall()]
+    earthquakes = cur.fetchall()
 
     # 津波（最新10件）
     cur.execute("""
@@ -158,7 +158,7 @@ def dashboard():
     ORDER BY created_at DESC
     LIMIT 10
     """)
-    tsunamis = [r[0] for r in cur.fetchall()]
+    tsunamis = cur.fetchall()
 
     cur.close()
     conn.close()
