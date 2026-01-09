@@ -149,7 +149,7 @@ def dashboard():
         ORDER BY created_at DESC
         LIMIT 10
     """)
-    earthquakes = [json.loads(r[0]) for r in cur.fetchall()]
+    earthquakes = [r[0] for r in cur.fetchall()]
 
     # 津波（最新10件）
     cur.execute("""

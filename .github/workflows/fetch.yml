@@ -2,7 +2,7 @@ name: Fetch Disaster Data
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # 30分ごと
+    - cron: "*/5 * * * *"  # 5分ごと
   workflow_dispatch:        # 手動実行も可能
 
 jobs:
