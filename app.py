@@ -375,11 +375,10 @@ def pre_check():
         logged_in=True
     )
 
-
 # ======================
 # 事前準備チェック結果
 # ======================
-@app.route("/pre_check/check_result", methods=["POST"])
+@app.route("/pre_check/pre_result", methods=["POST"])
 def prepare_result():
     # チェックされた条件を取得
     selected = {
@@ -400,7 +399,7 @@ def prepare_result():
             result[key] = SUPPLIES.get(key, [])
 
     return render_template(
-        "prepare_result.html",
+        "pre_result.html",
         supplies=result
     )
 
