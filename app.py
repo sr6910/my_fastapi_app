@@ -244,6 +244,12 @@ def dashboard():
         tsunamis=tsunamis
     )
 
+# ===== 事前準備ページ =====
+@app.route("/prepare")
+def prepare():
+    return render_template("prepare.html", logged_in="user_id" in session)
+
+
 # ======================
 # ログアウト
 # ======================
