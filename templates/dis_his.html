@@ -1,3 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>災害情報ダッシュボード</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<script>
+  // 30秒ごとにページを再読み込み
+  setInterval(() => {
+    location.reload();
+  }, 30000);
+</script>
+
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header class="header">
+    <div>災害情報ダッシュボード</div>
+    <div>
+        <a href="/prepare">事前準備</a>
+        <a href="/dashboard">戻る</a>       
+    </div>
+</header>
+
 <h1>{{ user_pref }} の過去の災害履歴</h1>
 
 <h2>地震</h2>

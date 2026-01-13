@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<!-- ===== ヘッダー ===== -->
 <div class="header">
     <div>災害情報ダッシュボード</div>
     <div>
@@ -15,25 +16,55 @@
 </div>
 
 <div class="container">
-    <h2>ログイン</h2>
+    <div class="login-wrapper">
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="msg">{{ messages[0] }}</div>
-      {% endif %}
-    {% endwith %}
+        <!-- ===== ログインフォーム ===== -->
+        <div class="login-box">
+            <h2>ログイン</h2>
 
-    <form method="POST">
-        <label>電話番号</label>
-        <input type="phone" name="phone" required>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="msg">{{ messages[0] }}</div>
+              {% endif %}
+            {% endwith %}
 
-        <label>パスワード</label>
-        <input type="password" name="password" required>
+            <form method="POST">
+                <label>電話番号</label>
+                <input type="text" name="phone" required>
 
-        <button type="submit">ログイン</button>
-    </form>
+                <label>パスワード</label>
+                <input type="password" name="password" required>
 
-    <p>アカウントをお持ちでない場合 <a href="/register">登録</a></p>
+                <button type="submit">ログイン</button>
+            </form>
+
+            <p style="margin-top:16px;">
+                アカウントをお持ちでない場合 →
+                <a href="/register"><strong>新規登録</strong></a>
+            </p>
+        </div>
+
+        <!-- ===== 登録メリット表示 ===== -->
+        <div class="benefit-box">
+            <h3>アカウント登録でできること</h3>
+            <ul>
+                <li>🔔 自分の住んでいる県の最新災害情報を確認</li>
+                <li>🕒 過去の地震・津波履歴を時系列で閲覧</li>
+                <li>🧰 災害時に役立つ事前準備リストを確認</li>
+                <li>📱 緊急時にすぐ使える個人向け防災ダッシュボード</li>
+            </ul>
+
+            <a href="/register" class="register-btn">
+                無料でアカウント登録
+            </a>
+
+            <p class="note">
+                ※ 登録情報は災害情報提供以外の目的では使用しません
+            </p>
+        </div>
+
+    </div>
 </div>
+
 </body>
 </html>

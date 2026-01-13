@@ -158,3 +158,49 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+/* ===== フッター ===== */
+.login-wrapper {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+
+.login-box, .benefit-box {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    flex: 1;
+    min-width: 280px;
+}
+
+.benefit-box h3 {
+    margin-top: 0;
+    color: #1976d2;
+}
+
+.benefit-box ul {
+    padding-left: 20px;
+}
+
+.benefit-box li {
+    margin-bottom: 10px;
+}
+
+.register-btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 16px;
+    background: #1976d2;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.note {
+    font-size: 13px;
+    color: #555;
+    margin-top: 12px;
+}

@@ -93,7 +93,7 @@ def after_request(response):
     return response
 
 # ======================
-# トップ（ログインへ）
+# トップページ
 # ======================
 @app.route("/")
 def index():
