@@ -97,7 +97,7 @@ def after_request(response):
 # ======================
 @app.route("/")
 def index():
-    return redirect(url_for("view_dashboard"))
+    return redirect(url_for("dashboard"))
 
 # ======================
 # ユーザー登録
