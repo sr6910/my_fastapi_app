@@ -198,9 +198,7 @@ def login():
 # ======================
 @app.route("/dashboard")
 def dashboard():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
+    
     conn = get_conn()
     cur = conn.cursor()
 
