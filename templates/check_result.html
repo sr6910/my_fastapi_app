@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>あなたに必要な防災物資</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="header">
+    <h1>あなたに必要な防災物資</h1>
+    <p>入力内容をもとに表示しています</p>
+    
+</div>
+
+<div class="container">
+
+{% for category, items in supplies.items() %}
+
+    <div class="card">
+
+        {% if category == "common" %}
+            <h2>👨‍👩‍👧 全員共通（必須）</h2>
+        {% elif category == "baby" %}
+            <h2>👶 乳幼児がいる場合</h2>
+        {% elif category == "pet" %}
+            <h2>🐶 ペットがいる場合</h2>
+        {% elif category == "medical" %}
+            <h2>🩺 医療的配慮が必要な場合</h2>
+        {% elif category == "elderly" %}
+            <h2>🧓 高齢者がいる場合</h2>
+        {% elif category == "female" %}
+            <h2>🚺 女性特有の配慮</h2>
+        {% endif %}
+
+        <ul>
+        {% for item in items %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+
+    </div>
+
+{% endfor %}
+
+<div class="back-links">
+    <a href="/pre_check">条件を変えて再確認</a>
+    |
+    <a href="/prepare">事前準備一覧に戻る</a>
+</div>
+
+</div>
+
+</body>
+</html>
