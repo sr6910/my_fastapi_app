@@ -366,7 +366,7 @@ def prepare():
 # 専用準備ページ
 # ======================
 @app.route("/pre_check")
-def prepare():
+def pre_check():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
