@@ -93,6 +93,53 @@ def after_request(response):
     return response
 
 # ======================
+# 防災物資定義
+# ======================
+SUPPLIES = {
+    "common": [
+        "水（1人1日3L × 3日以上）",
+        "非常食（3日分以上）",
+        "懐中電灯・予備電池",
+        "モバイルバッテリー",
+        "現金",
+        "ヘルメット／防災頭巾",
+        "笛（ホイッスル）"
+    ],
+    "baby": [
+        "ミルク（液体タイプ推奨）",
+        "哺乳瓶",
+        "離乳食",
+        "紙おむつ",
+        "おしりふき",
+        "着替え（多め）"
+    ],
+    "pet": [
+        "ペットフード",
+        "ペット用の水",
+        "ペットシーツ",
+        "リード",
+        "ワクチン証明書のコピー"
+    ],
+    "medical": [
+        "常備薬（多め）",
+        "お薬手帳",
+        "医療機器・予備電源",
+        "アレルギー対応薬"
+    ],
+    "elderly": [
+        "老眼鏡",
+        "補聴器・予備電池",
+        "杖",
+        "介護用品"
+    ],
+    "female": [
+        "生理用品",
+        "デリケートゾーンケア用品",
+        "防犯対策グッズ"
+    ]
+}
+
+# ======================
 # トップページ
 # ======================
 @app.route("/")
@@ -198,7 +245,7 @@ def login():
 # ======================
 @app.route("/dashboard")
 def dashboard():
-    
+
     conn = get_conn()
     cur = conn.cursor()
 
@@ -315,6 +362,47 @@ def my_history():
 def prepare():
     return render_template("prepare.html", logged_in="user_id" in session)
 
+# ======================
+# 専用準備ページ
+# ======================
+@app.route("/pre_check")
+def prepare():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    return render_template(
+        "pre_check.html",
+        logged_in=True
+    )
+
+
+# ======================
+# 事前準備チェック結果
+# ======================
+@app.route("/pre_check/check_result", methods=["POST"])
+def prepare_result():
+    # チェックされた条件を取得
+    selected = {
+        "elderly": request.form.get("elderly"),
+        "baby": request.form.get("baby"),
+        "pet": request.form.get("pet"),
+        "medical": request.form.get("medical"),
+        "female": request.form.get("female")
+    }
+
+    # 表示する物資をまとめる
+    result = {
+        "common": SUPPLIES["common"]
+    }
+
+    for key, value in selected.items():
+        if value:
+            result[key] = SUPPLIES.get(key, [])
+
+    return render_template(
+        "prepare_result.html",
+        supplies=result
+    )
 
 # ======================
 # ログアウト
