@@ -3,14 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>ダッシュボード</title>
-    <meta http-equiv="refresh" content="30"> <!-- 30秒ごとに自動更新 -->
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        h2 { margin-top: 40px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-        th { background: #f0f0f0; }
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
@@ -51,6 +44,21 @@
 </tr>
 {% endfor %}
 </table>
+
+<!-- 簡易物資（メイン下部） -->
+<div class="simple-prepare">
+<h3>地震・津波時の最低限の持ち出し物</h3>
+<ul>
+    <li>水・非常食（最低3日分）</li>
+    <li>懐中電灯・ラジオ</li>
+    <li>モバイルバッテリー</li>
+    <li>救急用品</li>
+    <li>現金・身分証</li>
+    <li>ヘルメット・笛</li>
+</ul>
+<p>
+詳細は <a href="/prepare">事前準備ページ</a> を参照
+</p>
 
 <p><a href="/logout">ログアウト</a></p>
 
