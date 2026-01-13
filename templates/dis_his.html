@@ -1,0 +1,38 @@
+<h1>{{ user_pref }} の過去の災害履歴</h1>
+
+<h2>地震</h2>
+{% if earthquakes %}
+<table>
+  <tr>
+    <th>地域</th><th>M</th><th>最大震度</th><th>時刻</th>
+  </tr>
+  {% for e in earthquakes %}
+  <tr>
+    <td>{{ e[0] }}</td>
+    <td>{{ e[1] }}</td>
+    <td>{{ e[2] }}</td>
+    <td>{{ e[3] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>該当する地震はありません</p>
+{% endif %}
+
+<h2>津波</h2>
+{% if tsunamis %}
+<table>
+  <tr>
+    <th>地域</th><th>種別</th><th>時刻</th>
+  </tr>
+  {% for t in tsunamis %}
+  <tr>
+    <td>{{ t[0] }}</td>
+    <td>{{ t[1] }}</td>
+    <td>{{ t[2] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>該当する津波情報はありません</p>
+{% endif %}

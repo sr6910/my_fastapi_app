@@ -244,7 +244,75 @@ def dashboard():
         tsunamis=tsunamis
     )
 
-# ===== 事前準備ページ =====
+# ======================
+# 自分の県の災害履歴
+# ======================
+@app.route("/dis_his")
+def my_history():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # ユーザーの登録県
+    cur.execute(
+        "SELECT location FROM dis_users WHERE id = %s",
+        (session["user_id"],)
+    )
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        flash("ユーザー情報が取得できません")
+        return redirect(url_for("dashboard"))
+
+    user_pref = row[0]
+
+    # ----------------------
+    # 地震履歴（県フィルタ）
+    # ----------------------
+    cur.execute("""
+        SELECT
+            raw_json->>'anm'  AS area,
+            raw_json->>'mag'  AS mag,
+            raw_json->>'maxi' AS maxi,
+            created_at
+        FROM dis_quake_history
+        WHERE raw_json->>'anm' LIKE %s
+        ORDER BY created_at DESC
+        LIMIT 50
+    """, (f"%{user_pref}%",))
+    earthquakes = cur.fetchall()
+
+    # ----------------------
+    # 津波履歴（県フィルタ）
+    # ----------------------
+    cur.execute("""
+        SELECT
+            raw_json->>'anm' AS area,
+            raw_json->'kind'->0->>'kind' AS kind,
+            created_at
+        FROM dis_tsunami_history
+        WHERE raw_json->>'anm' LIKE %s
+        ORDER BY created_at DESC
+        LIMIT 50
+    """, (f"%{user_pref}%",))
+    tsunamis = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "dis_his.html",
+        user_pref=user_pref,
+        earthquakes=earthquakes,
+        tsunamis=tsunamis
+    )
+
+# ====================== 
+# 事前準備ページ 
+# ======================
 @app.route("/prepare")
 def prepare():
     return render_template("prepare.html", logged_in="user_id" in session)
