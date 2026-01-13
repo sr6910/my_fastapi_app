@@ -2,65 +2,95 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ダッシュボード</title>
-    <link rel="stylesheet" href="/style.css">
+    <title>災害情報ダッシュボード</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<h1>災害情報ダッシュボード</h1>
+<!-- ===== ヘッダー ===== -->
+<header class="header">
+    <div>災害情報ダッシュボード</div>
+    <div>
+        <a href="/prepare">事前準備</a>
 
-<h2>地震情報</h2>
-<table>
-<tr>
-    <th>地域</th><th>マグニチュード</th><th>最大震度</th><th>時刻</th>
-</tr>
-{% for e in earthquakes %}
-<tr>
-    <td>{{ e[0] }}</td>
-    <td>{{ e[1] }}</td>
-    <td>{{ e[2] }}</td>
-    <td>{{ e[3] }}</td>
-</tr>
-{% endfor %}
-</table>
+        {% if logged_in %}
+            <a href="/logout">ログアウト</a>
+        {% else %}
+            <a href="/login">ログイン</a>
+            <a href="/register">新規登録</a>
+        {% endif %}
+    </div>
+</header>
 
-<h2>津波情報</h2>
-<table>
-<tr>
-    <th>地域</th><th>種別</th><th>危険度</th><th>時刻</th>
-</tr>
-{% for t in tsunamis %}
-<tr>
-    <td>{{ t[0] }}</td>  <!-- 地域 -->
-    <td>{{ t[1] }}</td>  <!-- 種別 -->
-    <td>
-    {% if t[2] == 3 %}★★★
-    {% elif t[2] == 2 %}★★
-    {% elif t[2] == 1 %}★
-    {% else %}なし
+<!-- ===== メイン ===== -->
+<div class="container">
+
+    <!-- 地震情報 -->
+    <h2>地震情報</h2>
+    <table>
+        <tr>
+            <th>地域</th>
+            <th>マグニチュード</th>
+            <th>最大震度</th>
+            <th>時刻</th>
+        </tr>
+        {% for e in earthquakes %}
+        <tr>
+            <td>{{ e[0] }}</td>
+            <td>{{ e[1] }}</td>
+            <td>{{ e[2] }}</td>
+            <td>{{ e[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- 津波情報 -->
+    <h2>津波情報</h2>
+
+    {% if tsunamis|length == 0 %}
+        <p>現在、津波情報は発表されていません。</p>
+    {% else %}
+    <table>
+        <tr>
+            <th>地域</th>
+            <th>種別</th>
+            <th>危険度</th>
+            <th>時刻</th>
+        </tr>
+        {% for t in tsunamis %}
+        <tr>
+            <td>{{ t[0] }}</td>
+            <td>{{ t[1] }}</td>
+            <td>
+                {% if t[2] == 3 %}★★★
+                {% elif t[2] == 2 %}★★
+                {% elif t[2] == 1 %}★
+                {% else %}なし
+                {% endif %}
+            </td>
+            <td>{{ t[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
     {% endif %}
-    </td>
-    <td>{{ t[3] }}</td>
-</tr>
-{% endfor %}
-</table>
 
-<!-- 簡易物資（メイン下部） -->
-<div class="simple-prepare">
-<h3>地震・津波時の最低限の持ち出し物</h3>
-<ul>
-    <li>水・非常食（最低3日分）</li>
-    <li>懐中電灯・ラジオ</li>
-    <li>モバイルバッテリー</li>
-    <li>救急用品</li>
-    <li>現金・身分証</li>
-    <li>ヘルメット・笛</li>
-</ul>
-<p>
-詳細は <a href="/prepare">事前準備ページ</a> を参照
-</p>
+    <!-- 簡易物資 -->
+    <div class="simple-prepare">
+        <h3>地震・津波時の最低限の持ち出し物</h3>
+        <ul>
+            <li>水・非常食（最低3日分）</li>
+            <li>懐中電灯・ラジオ</li>
+            <li>モバイルバッテリー</li>
+            <li>救急用品</li>
+            <li>現金・身分証</li>
+            <li>ヘルメット・笛</li>
+        </ul>
+        <p>
+            詳細は <a href="/prepare">事前準備ページ</a> を参照
+        </p>
+    </div>
 
-<p><a href="/logout">ログアウト</a></p>
+</div>
 
 </body>
 </html>
