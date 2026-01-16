@@ -120,6 +120,22 @@ def save_sms_log(user_phone, message, status, twilio_sid=None):
     conn.close()
 
 # ======================
+#日本の携帯番号を Twilio 用 (E.164) に変換
+# ======================
+
+def normalize_phone_jp(phone: str) -> str:
+    phone = phone.replace("-", "").strip()
+
+    if phone.startswith("+"):
+        return phone  # すでに国番号付き
+
+    if phone.startswith("0"):
+        return "+81" + phone[1:]
+
+    return phone  # 想定外はそのまま
+
+
+# ======================
 # 通知送信（県別・条件判定）
 # ======================
 def send_disaster_sms(raw_json, dtype):
@@ -163,17 +179,15 @@ def send_disaster_sms(raw_json, dtype):
         if location not in raw_json.get("anm", ""):
             continue
 
+        phone_e164 = normalize_phone_jp(phone)
+
     try:
         message = client.messages.create(
             body=msg,
             from_=TWILIO_FROM_PHONE,
-            to=phone
+            to=phone_e164
         )
-
-        status = "test_sent" if TEST_MODE else "sent"
-        save_sms_log(phone, msg, status=status, twilio_sid=message.sid)
-
-        print(f"[SMS {status}] {msg} -> {phone}")
+        save_sms_log(phone_e164, msg, status="sent", twilio_sid=message.sid)    
 
     except Exception as e:
         save_sms_log(phone, msg, status="failed")
