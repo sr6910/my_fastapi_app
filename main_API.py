@@ -44,7 +44,7 @@ def get_conn():
 def get_test_earthquake_data():
     return {
         "eid": "TEST-20260116-001",
-        "anm": "愛知県南部",
+        "anm": "テスト南部",
         "mag": "3.6",
         "maxi": "5",
         "at": "2026-01-16T13:39:58.727991"
