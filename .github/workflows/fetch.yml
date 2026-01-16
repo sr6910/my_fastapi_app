@@ -6,7 +6,7 @@ on:
   workflow_dispatch:        # 手動実行も可能
 
 env:
-  TEST_MODE: "0"   # ← ここで切り替え
+  TEST_MODE: "1"   # ← ここで切り替え
                    # "1"はテストモード、"0"は本番モード
 
 
