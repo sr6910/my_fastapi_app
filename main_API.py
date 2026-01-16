@@ -85,14 +85,24 @@ def get_last_event_id(dtype):
     conn.close()
     return row[0] if row else None
 
-def update_last_event_id(dtype, event_id):
+def update_last_event_id(data_type, event_id):
     conn = sqlite3.connect("disaster.db")
     cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS last_event (
+            type TEXT PRIMARY KEY,
+            event_id TEXT
+        )
+    """)
+
     cur.execute("""
         INSERT INTO last_event(type, event_id)
         VALUES (?, ?)
-        ON CONFLICT(type) DO UPDATE SET event_id=excluded.event_id
-    """, (dtype, event_id))
+        ON CONFLICT(type)
+        DO UPDATE SET event_id=excluded.event_id
+    """, (data_type, event_id))
+
     conn.commit()
     conn.close()
 
