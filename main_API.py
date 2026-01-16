@@ -144,7 +144,9 @@ def send_disaster_sms(raw_json, dtype):
         if maxi_val < 4:
             return
 
-        msg = f"[地震] {quake_area} 最大震度 {maxi_val}"
+        #msg = f"[地震] {quake_area} 最大震度 {maxi_val}"
+        msg = "テスト"
+
 
     else:  # tsunami
         kind_list = raw_json.get("kind")
@@ -193,6 +195,7 @@ def process_disaster(data_type, url):
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)
+            send_disaster_sms(raw_json, "earthquake")
 
         elif data_type == "tsunami":
             raw_json = {
@@ -202,8 +205,9 @@ def process_disaster(data_type, url):
                 "at": datetime.now().isoformat()
             }
             save_data("dis_tsunami_history", raw_json)
+            send_disaster_sms(raw_json, "tsunami")
 
-        print(f"[TEST MODE] inserted {data_type}")
+        print(f"[TEST MODE] earthquake/tsunami sent via Twilio")
         return
 
     # ---------- 本番モード ----------
