@@ -207,7 +207,7 @@ def process_disaster(data_type, url):
                 "eid": f"TEST-EQ-{now}",
                 "anm": "愛知県東部",
                 "mag": "3.6",
-                "maxi": "7",
+                "maxi": "2",
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)
@@ -217,7 +217,7 @@ def process_disaster(data_type, url):
             raw_json = {
                 "eid": f"TEST-TS-{now}",
                 "anm": "愛知県沿岸",
-                "kind": [{"kind": "津波警報"}],
+                "kind": [{"kind": "津波注意報"}],
                 "at": datetime.now().isoformat()
             }
             save_data("dis_tsunami_history", raw_json)
