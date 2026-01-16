@@ -163,20 +163,22 @@ def send_disaster_sms(raw_json, dtype):
         if location not in raw_json.get("anm", ""):
             continue
 
-        if TEST_MODE:
-            save_sms_log(phone, msg, status="test")
-            print(f"[TEST MODE] SMSログ作成: {msg} -> {phone}")
-        else:
-            try:
-                message = client.messages.create(
-                    body=msg,
-                    from_=TWILIO_FROM_PHONE,
-                    to=phone
-                )
-                save_sms_log(phone, msg, status="sent", twilio_sid=message.sid)
-            except Exception as e:
-                save_sms_log(phone, msg, status="failed")
-                print(e)
+    try:
+        message = client.messages.create(
+            body=msg,
+            from_=TWILIO_FROM_PHONE,
+            to=phone
+        )
+
+        status = "test_sent" if TEST_MODE else "sent"
+        save_sms_log(phone, msg, status=status, twilio_sid=message.sid)
+
+        print(f"[SMS {status}] {msg} -> {phone}")
+
+    except Exception as e:
+        save_sms_log(phone, msg, status="failed")
+        print("Twilio error:", e)
+
 
 # ======================
 # 災害データ処理
@@ -189,7 +191,7 @@ def process_disaster(data_type, url):
         if data_type == "earthquake":
             raw_json = {
                 "eid": f"TEST-EQ-{now}",
-                "anm": "愛知県南部",
+                "anm": "愛知県東部",
                 "mag": "3.6",
                 "maxi": "7",
                 "at": datetime.now().isoformat()
