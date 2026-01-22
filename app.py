@@ -7,6 +7,7 @@ import psycopg
 import hashlib
 import json
 import os
+import re
 
 # ======================
 # Flask 基本設定
@@ -170,6 +171,29 @@ SUPPLIES = {
     ]
 
 }
+# ======================
+# 日本の電話番号判定
+# ======================
+
+def validate_jp_phone(phone: str) -> bool:
+    if not phone:
+        return False
+
+    phone = phone.strip()
+
+    # 数字のみ
+    if not re.fullmatch(r"\d+", phone):
+        return False
+
+    # 日本の番号は0始まり
+    if not phone.startswith("0"):
+        return False
+
+    # 桁数チェック（固定電話・携帯）
+    if len(phone) not in (10, 11):
+        return False
+
+    return True
 
 # ======================
 # トップページ
@@ -192,6 +216,11 @@ def register():
         if not all([username, phone, password, location]):
             flash("全ての項目を入力してください")
             return redirect(url_for("register"))
+
+        if not validate_jp_phone(phone):
+            flash("電話番号は数字のみ・10桁または11桁で入力してください")
+            return redirect(url_for("register"))
+
 
         hashed_pw = hash_password(password)
 

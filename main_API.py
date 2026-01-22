@@ -1,4 +1,5 @@
-# main_API.py（地震＋津波 県別・震度／警報判定対応完全版・テストモード対応）
+# main_API.py
+
 import requests
 import json
 import psycopg
@@ -160,8 +161,8 @@ def send_disaster_sms(raw_json, dtype):
         if maxi_val < 4:
             return
 
-        #msg = f"[地震] {quake_area} 最大震度 {maxi_val}"
-        msg = "テスト"
+        # 地震メッセージ作成
+        msg = f"[地震] {quake_area} 最大震度 {maxi_val}\n水（1人1日3L × 3日以上）\n非常食（3日分以上）\nを持って逃げましょう。"
 
 
     else:  # tsunami
@@ -173,6 +174,7 @@ def send_disaster_sms(raw_json, dtype):
         if "津波警報" not in kind_text and "大津波警報" not in kind_text:
             return
 
+        # 津波メッセージ作成
         msg = f"[津波] {raw_json.get('anm')} {kind_text}"
 
     for phone, location in users:
@@ -207,7 +209,7 @@ def process_disaster(data_type, url):
                 "eid": f"TEST-EQ-{now}",
                 "anm": "愛知県東部",
                 "mag": "3.6",
-                "maxi": "2",
+                "maxi": "7",
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)

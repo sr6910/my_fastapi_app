@@ -10,7 +10,7 @@
 
 <!-- ===== ヘッダー ===== -->
 <header class="header">
-    <h1>災害グッズ確認</h1>
+    <h1>ディザスタロウ~準備物確認~</h1>
     <div>
         <a href="/prepare">事前準備一覧</a>
         <a href="/dashboard">災害情報</a>
@@ -36,7 +36,20 @@
         {% elif category == "elderly" %}
             <h2>🧓 高齢者がいる場合</h2>
         {% elif category == "female" %}
-            <h2>🚺 女性特有の配慮</h2>
+            <h2>👧 女性特有の配慮</h2>
+        {% if category == "alone" %}
+            <h2>👨 一人暮らしの場合</h2>
+        {% elif category == "pregnant" %}
+            <h2>🚺 妊娠中の人がいる場合</h2>
+        {% elif category == "allergy" %}
+            <h2>💊 アレルギーがある場合</h2>
+        {% elif category == "home" %}
+            <h2>🏕️ 在宅避難を想定の場合</h2>
+        {% elif category == "car" %}
+            <h2>🚗 クルマを所有している場合</h2>
+        {% elif category == "foreign" %}
+            <h2>🔤 多言語対応が必要な場合</h2>
+        
         {% endif %}
 
         <ul>
