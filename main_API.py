@@ -207,14 +207,15 @@ def process_disaster(data_type, url):
         if data_type == "earthquake":
             raw_json = {
                 "eid": f"TEST-EQ-{now}",
-                "anm": "宗谷地方南部",
-                "mag": "4.1",
-                "maxi": "2",
+                "anm": "長野県北部部",
+                "mag": "2.4",
+                "maxi": "1",
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)
             send_disaster_sms(raw_json, "earthquake")
 
+        """
         elif data_type == "tsunami":
             raw_json = {
                 "eid": f"TEST-TS-{now}",
@@ -224,6 +225,7 @@ def process_disaster(data_type, url):
             }
             save_data("dis_tsunami_history", raw_json)
             send_disaster_sms(raw_json, "tsunami")
+        """
 
         print(f"[TEST MODE] earthquake/tsunami sent via Twilio")
         return
