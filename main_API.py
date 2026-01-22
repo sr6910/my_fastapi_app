@@ -175,7 +175,7 @@ def send_disaster_sms(raw_json, dtype):
             return
 
         # 津波メッセージ作成
-        msg = f"[津波] {raw_json.get('anm')} {kind_text}"
+        msg = f"[津波] {raw_json.get('anm')} {kind_text}\n水（1人1日3L × 3日以上）\n非常食（3日分以上）\nを持って逃げましょう。"
 
     for phone, location in users:
         if location not in raw_json.get("anm", ""):
@@ -207,9 +207,9 @@ def process_disaster(data_type, url):
         if data_type == "earthquake":
             raw_json = {
                 "eid": f"TEST-EQ-{now}",
-                "anm": "宗谷地方南部",
+                "anm": "愛知県南部",
                 "mag": "4.1",
-                "maxi": "3",
+                "maxi": "7",
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)
