@@ -204,18 +204,18 @@ def process_disaster(data_type, url):
     if TEST_MODE:
         now = datetime.now().strftime("%Y%m%d%H%M%S")
 
-        """
+
         if data_type == "earthquake":
             raw_json = {
                 "eid": f"TEST-EQ-{now}",
                 "anm": "愛知県南部",
-                "mag": "4.1",
+                "mag": "5.1",
                 "maxi": "7",
                 "at": datetime.now().isoformat()
             }
             save_data("dis_quake_history", raw_json)
             send_disaster_sms(raw_json, "earthquake")
-        """
+        
         
         if data_type == "tsunami":
             raw_json = {
