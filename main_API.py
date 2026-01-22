@@ -207,8 +207,8 @@ def process_disaster(data_type, url):
         if data_type == "earthquake":
             raw_json = {
                 "eid": f"TEST-EQ-{now}",
-                "anm": "福島県沖",
-                "mag": "4.3",
+                "anm": "宗谷地方南部",
+                "mag": "4.1",
                 "maxi": "2",
                 "at": datetime.now().isoformat()
             }
@@ -218,7 +218,7 @@ def process_disaster(data_type, url):
         elif data_type == "tsunami":
             raw_json = {
                 "eid": f"TEST-TS-{now}",
-                "anm": "福島県沿岸",
+                "anm": "宗谷地方沿岸",
                 "kind": [{"kind": "津波注意報"}],
                 "at": datetime.now().isoformat()
             }
