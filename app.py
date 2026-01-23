@@ -10,25 +10,25 @@ import os
 import re
 
 # ======================
-# Flask 基本設定
+# Flask 基本設定'(志水)
 # ======================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
 
 # ======================
-# DB 接続（Render 用）
+# DB 接続（Render 用）(志水)
 # ======================
 def get_conn():
     return psycopg.connect(os.environ["DATABASE_URL"])
 
 # ======================
-# パスワードハッシュ
+# パスワードハッシュ(荒木)
 # ======================
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ======================
-# ログ用ユーティリティ
+# ログ用ユーティリティ(志水)
 # ======================
 def safe_params():
     params = request.values.to_dict()
@@ -47,7 +47,7 @@ def infer_action():
     return "access"
 
 # ======================
-# ログ開始（全リクエスト）
+# ログ開始（全リクエスト）(志水)
 # ======================
 @app.before_request
 def before_request():
@@ -61,7 +61,7 @@ def before_request():
     }
 
 # ======================
-# ログ保存（全レスポンス）
+# ログ保存（全レスポンス）(志水)
 # ======================
 @app.after_request
 def after_request(response):
@@ -94,7 +94,7 @@ def after_request(response):
     return response
 
 # ======================
-# 防災物資定義
+# 防災物資定義(志水)
 # ======================
 SUPPLIES = {
     "common": [
@@ -172,7 +172,7 @@ SUPPLIES = {
 
 }
 # ======================
-# 日本の電話番号判定
+# 日本の電話番号判定(志水)
 # ======================
 
 def validate_jp_phone(phone: str) -> bool:
@@ -196,14 +196,14 @@ def validate_jp_phone(phone: str) -> bool:
     return True
 
 # ======================
-# トップページ
+# トップページ(荒木)
 # ======================
 @app.route("/")
 def index():
     return redirect(url_for("dashboard"))
 
 # ======================
-# ユーザー登録
+# ユーザー登録(志水)
 # ======================
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -267,7 +267,7 @@ def register():
     return render_template("register.html", prefectures=prefectures)
 
 # ======================
-# ログイン
+# ログイン(志水)
 # ======================
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -302,7 +302,7 @@ def login():
     return render_template("login.html")
 
 # ======================
-# ダッシュボード
+# ダッシュボード(志水)
 # ======================
 @app.route("/dashboard")
 def dashboard():
@@ -351,7 +351,7 @@ def dashboard():
     )
 
 # ======================
-# 自分の県の災害履歴
+# 自分の県の災害履歴(志水)
 # ======================
 @app.route("/dis_his")
 def my_history():
@@ -376,7 +376,7 @@ def my_history():
     user_pref = row[0]
 
     # ----------------------
-    # 地震履歴（県フィルタ）
+    # 地震履歴（県フィルタ）(志水)
     # ----------------------
     cur.execute("""
         SELECT
@@ -392,7 +392,7 @@ def my_history():
     earthquakes = cur.fetchall()
 
     # ----------------------
-    # 津波履歴（県フィルタ）
+    # 津波履歴（県フィルタ）(志水)
     # ----------------------
     cur.execute("""
         SELECT
@@ -417,14 +417,14 @@ def my_history():
     )
 
 # ====================== 
-# 事前準備ページ 
+# 事前準備ページ (荒木)
 # ======================
 @app.route("/prepare")
 def prepare():
     return render_template("prepare.html", logged_in="user_id" in session)
 
 # ======================
-# 専用準備ページ
+# 専用準備ページ(志水)
 # ======================
 @app.route("/pre_check")
 def pre_check():
@@ -437,7 +437,7 @@ def pre_check():
     )
 
 # ======================
-# 事前準備チェック結果
+# 事前準備チェック結果(志水)
 # ======================
 @app.route("/pre_check/pre_result", methods=["POST"])
 def prepare_result():
@@ -465,7 +465,7 @@ def prepare_result():
     )
 
 # ======================
-# ログアウト
+# ログアウト(荒木)
 # ======================
 @app.route("/logout")
 def logout():
@@ -474,7 +474,7 @@ def logout():
     return redirect(url_for("login"))
 
 # ======================
-# 起動
+# 起動(志水)
 # ======================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)

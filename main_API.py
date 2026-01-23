@@ -9,7 +9,7 @@ from datetime import datetime
 from twilio.rest import Client
 
 # ======================
-# 設定
+# 設定(志水)
 # ======================
 API_LIST = {
     "earthquake": "https://www.jma.go.jp/bosai/quake/data/list.json",
@@ -17,12 +17,12 @@ API_LIST = {
 }
 
 # ======================
-# テストモード
+# テストモード(志水)
 # ======================
 TEST_MODE = os.environ.get("TEST_MODE", "0") == "1"
 
 # ======================
-# Twilio
+# Twilio(大竹)
 # ======================
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
@@ -30,19 +30,19 @@ TWILIO_FROM_PHONE = os.environ.get("TWILIO_FROM_PHONE")
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if TWILIO_ACCOUNT_SID else None
 
 # ======================
-# ログ用 SQLite
+# ログ用 SQLite(大竹)
 # ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SMS_DB_PATH = os.path.join(BASE_DIR, "sms_log.db")
 
 # ======================
-# PostgreSQL接続
+# PostgreSQL接続(志水)
 # ======================
 def get_conn():
     return psycopg.connect(os.environ["DATABASE_URL"])
 
 # ======================
-# PostgreSQLにraw_jsonを保存
+# PostgreSQLにraw_jsonを保存(志水)
 # ======================
 def save_data(table, raw_json, eid_key="eid"):
     conn = get_conn()
@@ -60,7 +60,7 @@ def save_data(table, raw_json, eid_key="eid"):
     conn.close()
 
 # ======================
-# SQLite：最後に取得した event_id（本番のみ）
+# SQLite：最後に取得した event_id（本番のみ）(志水)
 # ======================
 def get_last_event_id(data_type):
     conn = sqlite3.connect("disaster.db")
@@ -92,7 +92,7 @@ def update_last_event_id(data_type, event_id):
     conn.close()
 
 # ======================
-# SMSログ保存
+# SMSログ保存(大竹)
 # ======================
 def save_sms_log(user_phone, message, status, twilio_sid=None):
     conn = sqlite3.connect(SMS_DB_PATH)
@@ -121,7 +121,7 @@ def save_sms_log(user_phone, message, status, twilio_sid=None):
     conn.close()
 
 # ======================
-#日本の携帯番号を Twilio 用 (E.164) に変換
+#日本の携帯番号を Twilio 用 (E.164) に変換(志水)
 # ======================
 
 def normalize_phone_jp(phone: str) -> str:
@@ -137,7 +137,7 @@ def normalize_phone_jp(phone: str) -> str:
 
 
 # ======================
-# 通知送信（県別・条件判定）
+# 通知送信（県別・条件判定）(志水)
 # ======================
 def send_disaster_sms(raw_json, dtype):
     conn = get_conn()
@@ -197,7 +197,7 @@ def send_disaster_sms(raw_json, dtype):
 
 
 # ======================
-# 災害データ処理
+# 災害データ処理(志水)
 # ======================
 def process_disaster(data_type, url):
     # ---------- テストモード ----------
@@ -249,7 +249,7 @@ def process_disaster(data_type, url):
         update_last_event_id(data_type, event_id)
 
 # ======================
-# メイン処理
+# メイン処理(志水)
 # ======================
 if __name__ == "__main__":
     for dtype, url in API_LIST.items():
