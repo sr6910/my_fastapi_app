@@ -441,7 +441,13 @@ def prepare_result():
         "baby": request.form.get("baby"),
         "pet": request.form.get("pet"),
         "medical": request.form.get("medical"),
-        "female": request.form.get("female")
+        "female": request.form.get("female"),
+        "alone": request.form.get("alone"),
+        "pregnant": request.form.get("pregnant"),
+        "allergy": request.form.get("allergy"),
+        "home": request.form.get("home"),
+        "car": request.form.get("car"),
+        "foreign": request.form.get("foreign")
     }
 
     # 表示する物資をまとめる
